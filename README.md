@@ -26,8 +26,7 @@ func main() {
 	myHandler := http.HandlerFunc(myApp)
 
 	torBlocker := torblock.New(torblock.Options{
-		UpdateFrequency: 60,
-		CheckURL:        "https://gist.githubusercontent.com/duggan/d60e32fb97ab9e0abdbe/raw/exit-addresses",
+		UpdateFrequency: 3600,
 	})
 	torBlocker.Run()
 
