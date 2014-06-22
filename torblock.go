@@ -12,12 +12,13 @@ import (
 )
 
 const version = "0.1.0"
-const timeFormat = "2006-01-02 15:04:05" 
-var   checkURL = "https://check.torproject.org/exit-addresses"
+const timeFormat = "2006-01-02 15:04:05"
+
+var checkURL = "https://check.torproject.org/exit-addresses"
 
 type ExitAddress struct {
-	IPAddress  string
-	Time       time.Time
+	IPAddress string
+	Time      time.Time
 }
 
 type TorNode struct {
@@ -29,7 +30,7 @@ type TorNode struct {
 
 type TorNodeList struct {
 	Nodes   []TorNode
-	Updated time.Time 
+	Updated time.Time
 }
 
 type Options struct {
@@ -38,9 +39,9 @@ type Options struct {
 }
 
 type TorBlock struct {
-	opt             Options
-	badHostHandler  http.Handler
-	NodeList        TorNodeList
+	opt            Options
+	badHostHandler http.Handler
+	NodeList       TorNodeList
 }
 
 func New(options Options) *TorBlock {
@@ -58,7 +59,7 @@ func (t *TorBlock) Run() {
 
 	var updateFrequency int64
 	updateFrequency = 3600 // default 1 hour
-	
+
 	if t.opt.UpdateFrequency > 0 {
 		updateFrequency = t.opt.UpdateFrequency
 	}
@@ -68,23 +69,23 @@ func (t *TorBlock) Run() {
 	quit := make(chan struct{})
 	go func() {
 		for {
-		   select {
-			case <- ticker.C:
+			select {
+			case <-ticker.C:
 				list, err := fetchList()
 				if err != nil {
 					log.Println("[torblock] Failed to retrieve Tor node list")
 				}
 				t.NodeList = list
-			case <- quit:
+			case <-quit:
 				ticker.Stop()
 				return
 			}
 		}
-	 }()
+	}()
 }
 
 func (t *TorBlock) process(w http.ResponseWriter, r *http.Request) error {
-	
+
 	if len(t.NodeList.Nodes) == 0 {
 		list, err := fetchList()
 		if err != nil {
@@ -125,7 +126,7 @@ func fetchList() (TorNodeList, error) {
 		var node TorNode
 		var i = 0
 		for contents.Scan() {
-			if i % 4 == 0 {
+			if i%4 == 0 {
 				if node.ExitNode != "" {
 					list.Nodes = append(list.Nodes, node)
 				}
@@ -137,15 +138,15 @@ func fetchList() (TorNodeList, error) {
 				node.ExitNode = parts[1]
 				break
 			case "Published":
-				pub, _ := time.Parse(timeFormat, parts[1] + " " + parts[2])
+				pub, _ := time.Parse(timeFormat, parts[1]+" "+parts[2])
 				node.Published = pub
 				break
 			case "LastStatus":
-				status, _ := time.Parse(timeFormat, parts[1] + " " + parts[2])
+				status, _ := time.Parse(timeFormat, parts[1]+" "+parts[2])
 				node.LastStatus = status
 				break
 			case "ExitAddress":
-				exitseen, _ := time.Parse(timeFormat, parts[2] + " " + parts[3])
+				exitseen, _ := time.Parse(timeFormat, parts[2]+" "+parts[3])
 				node.ExitAddress.IPAddress = parts[1]
 				node.ExitAddress.Time = exitseen
 				break
